@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  back-end-ima:
+      build: .
+      container_name: backend_server_ima
+      env_file:
+        - .env
+      
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.`${BACKEND_ROUTER}`.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
+        - traefik.http.routers.`${BACKEND_ROUTER}`.entrypoints=websecure
+        - traefik.http.routers.`${BACKEND_ROUTER}`.tls=true
+        - traefik.http.routers.`${BACKEND_ROUTER}`.tls.certresolver=mytlschallenge
+        - traefik.http.services.`${BACKEND_SERVICE}`.loadbalancer.server.port=`${PORT}`
+
+      networks:
+        - traefik
+
+      restart: unless-stoped
+
+networks:
+   traefik:
+      external: true
+      name: root_default
+
