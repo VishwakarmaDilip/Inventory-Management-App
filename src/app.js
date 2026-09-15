@@ -6,6 +6,10 @@ const app = express()
 
 const whiteList = process.env.CORS_ORIGIN_WHITELIST
 
+console.log("CORS ENV:", process.env.CORS_ORIGIN_WHITELIST)
+console.log("WHITE LIST:", whiteList)
+console.log("IS ARRAY:", Array.isArray(whiteList))
+
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || whiteList.includes(origin)) {
