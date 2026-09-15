@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  back-end-ima:
+  server:
       build: .
       container_name: backend_server_ima
       env_file:
@@ -20,25 +20,8 @@ services:
 
       restart: unless-stopped
 
-  admin-frontend:
-    build: ../Preety-Jewellery-Admin-Page
-    container_name: admin-frontend
-
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.admin.rule=Host(`admin.prettyadornment.devbydilip.cloud`)
-      - traefik.http.routers.admin.entrypoints=websecure
-      - traefik.http.routers.admin.tls=true
-      - traefik.http.routers.admin.tls.certresolver=mytlschallenge
-      - traefik.http.services.admin.loadbalancer.server.port=80
-
-    networks:
-      - traefik
-
-    restart: unless-stopped
-
 networks:
-   traefik:
-      external: true
-      name: root_default
+  traefik:
+    external: true
+    name: root_default
 
