@@ -56,6 +56,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const generateCode = asyncHandler(async (req, res) => {
     const { productId, productQuantity } = req.body
+    
 
     if (!productId || !productQuantity) {
         throw new ApiError(400, "All fields Required")
