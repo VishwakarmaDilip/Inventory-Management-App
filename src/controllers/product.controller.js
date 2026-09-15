@@ -392,5 +392,5 @@ module.exports = {
     deletProduct,
     deleteProductCode,
     updateProduct,
-    updateCode
+    updateCode,
 }
