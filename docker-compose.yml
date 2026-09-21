@@ -24,4 +24,3 @@ networks:
   traefik:
     external: true
     name: root_default
-
