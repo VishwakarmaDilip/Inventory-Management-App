@@ -4,11 +4,12 @@ const {
     createProduct,
     generateCode,
     getProducts,
-    getCods,
+    getCodes,
     deleteProductCode,
     deletProduct,
     updateProduct,
-    updateCode
+    updateCode,
+    getBlanckCodes
 } = require("../controllers/product.controller");
 
 
@@ -17,7 +18,8 @@ const router = Router()
 router.route("/createProduct").post(upload.single("image"), createProduct)
 router.route("/generateCode").post(generateCode)
 router.route("/getProducts").get(getProducts)
-router.route("/getCodes").get(getCods)
+router.route("/getCodes").get(getCodes)
+router.route("/getBlankCodes").get(getBlanckCodes)
 router.route("/deleteProduct").delete(deletProduct)
 router.route("/deleteProductCode").delete(deleteProductCode)
 router.route("/updateProduct").patch(updateProduct)

@@ -54,57 +54,90 @@ const createProduct = asyncHandler(async (req, res) => {
 
 })
 
+// const generateCode = asyncHandler(async (req, res) => {
+//     const { productId, productQuantity } = req.body
+
+
+//     if (!productId || !productQuantity) {
+//         throw new ApiError(400, "All fields Required")
+//     }
+
+//     const product = await Product.findById(productId)
+
+//     if (!product) {
+//         throw new ApiError(404, "No Product Found")
+//     }
+
+//     const counter = await Counter.findOneAndUpdate(
+//         { counter: "QRCode" },
+//         { $inc: { sequence: 1 } },
+//         { upsert: true, returnDocument: "after" }
+//     )
+
+//     const code = `BDL-CD-${String(counter.sequence).padStart(6, "0")}`
+
+//     const newCode = await QrCode.create({
+//         code,
+//         productQuantity,
+//         productId: product.PID,
+//         product: product._id,
+//     })
+
+
+//     const qrQuantity = await QrCode.countDocuments(
+//         {
+//             product: product._id
+//         }
+//     )
+
+//     if (!qrQuantity) {
+//         throw new ApiError(404, "No product found")
+//     }
+
+//     product.bundleQty = qrQuantity
+//     product.stock = (parseInt(product.stock) + parseInt(productQuantity))
+
+//     product.save()
+
+//     return res
+//         .status(200)
+//         .json(new ApiResponse(
+//             200, newCode, "QR or Bar Code Generated Succesfully"
+//         ))
+
+// })
+
 const generateCode = asyncHandler(async (req, res) => {
-    const { productId, productQuantity } = req.body
-    
+    const { qrQuantity } = req.body
 
-    if (!productId || !productQuantity) {
-        throw new ApiError(400, "All fields Required")
+    if (qrQuantity > 40) {
+        throw new ApiError(406, "Not Executable")
     }
 
-    const product = await Product.findById(productId)
+    let newQrCodes = [];
+    let newCode;
 
-    if (!product) {
-        throw new ApiError(404, "No Product Found")
+    for (let i = 1; i <= qrQuantity; i++) {
+        const counter = await Counter.findOneAndUpdate(
+            { counter: "QRCode" },
+            { $inc: { sequence: 1 } },
+            { upsert: true, returnDocument: "after" }
+        )
+
+        const code = `BDL-CD-${String(counter.sequence).padStart(6, "0")}`
+
+        newCode = await QrCode.create({
+            code
+        })
+
+        newQrCodes.push(code)
     }
-
-    const counter = await Counter.findOneAndUpdate(
-        { counter: "QRCode" },
-        { $inc: { sequence: 1 } },
-        { upsert: true, returnDocument: "after" }
-    )
-
-    const code = `BDL-CD-${String(counter.sequence).padStart(6, "0")}`
-
-    const newCode = await QrCode.create({
-        code,
-        productQuantity,
-        productId: product.PID,
-        product: product._id,
-    })
-
-
-    const qrQuantity = await QrCode.countDocuments(
-        {
-            product: product._id
-        }
-    )
-
-    if (!qrQuantity) {
-        throw new ApiError(404, "No product found")
-    }
-
-    product.bundleQty = qrQuantity
-    product.stock = (parseInt(product.stock) + parseInt(productQuantity))
-
-    product.save()
 
     return res
         .status(200)
         .json(new ApiResponse(
-            200, newCode, "QR or Bar Code Generated Succesfully"
+            200, { newQrCodes }, "QR or Bar Code Generated Succesfully"
         ))
-
 })
 
 const getProducts = asyncHandler(async (req, res) => {
@@ -156,7 +189,7 @@ const getProducts = asyncHandler(async (req, res) => {
     )
 })
 
-const getCods = asyncHandler(async (req, res) => {
+const getCodes = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType } = req.query
 
     const pageNumber = parseInt(page, 10)
@@ -172,10 +205,21 @@ const getCods = asyncHandler(async (req, res) => {
         ]
     }
 
-    const totalCode = await QrCode.countDocuments(queryObject)
+    const totalCode = await QrCode.countDocuments({
+        ...queryObject,
+        product: {
+            $exists: true,
+            $ne: null
+        }
+    })
 
     const fetchCode = await QrCode.aggregate([
-        { $match: queryObject },
+        {
+            $match: {
+                ...queryObject,
+                product: { $exists: true, $ne: null }
+            }
+        },
         { $sort: { [sortBy]: sortOrder } },
         { $skip: skip },
         { $limit: limitNumber },
@@ -206,6 +250,52 @@ const getCods = asyncHandler(async (req, res) => {
                 __v: 0,
             }
         }
+    ])
+
+    const pageInfo = {
+        page: pageNumber,
+        limit: limitNumber,
+        totalCode,
+        totalPages: Math.ceil(totalCode / limitNumber)
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { fetchCode, pageInfo }
+        )
+    )
+})
+
+const getBlanckCodes = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType } = req.query
+
+    const pageNumber = parseInt(page, 10)
+    const limitNumber = parseInt(limit, 10)
+    const skip = (pageNumber - 1) * limitNumber
+
+    const sortOrder = sortType === "descending" ? -1 : 1
+
+    const queryObject = {}
+    if (query) {
+        queryObject.$or = [
+            { code: { $regex: query, $options: "i" } },
+        ]
+    }
+
+    const totalCode = await QrCode.countDocuments({
+        ...queryObject,
+        product: {
+            $exists: false,
+            $eq: null
+        }
+    })
+
+    const fetchCode = await QrCode.aggregate([
+        { $match: { ...queryObject, product: { $exists: false, $eq: null } } },
+        { $sort: { [sortBy]: sortOrder } },
+        { $skip: skip },
+        { $limit: limitNumber },
     ])
 
     const pageInfo = {
@@ -315,22 +405,32 @@ const updateProduct = asyncHandler(async (req, res) => {
 })
 
 const updateCode = asyncHandler(async (req, res) => {
-    const { codeId, productQuantity, decreaseProduct, increaseProduct } = req.body
+    const { codeId, productQuantity, decreaseProduct, increaseProduct, productId } = req.body
 
     if (!codeId) {
         throw new ApiError(400, "All feild required")
     }
 
     let code;
+    let product;
     let deletedCode
 
     code = await QrCode.findById(codeId)
-    const product = await Product.findById(code.product)
 
+
+    if (!productId) {
+        product = await Product.findById(code.product)
+    } else {
+        product = await Product.findById(productId)
+    }
 
 
     if (!code || !product) {
         throw new ApiError(404, "No Code and Product Found")
+    }
+
+    if (!code.product) {
+        code.product = product._id
     }
 
     if (productQuantity) {
@@ -372,12 +472,20 @@ const updateCode = asyncHandler(async (req, res) => {
     }
 
 
-    product.save()
 
     if (!deletedCode) {
-        code.save()        
+        await code.save()
     }
 
+    const qrQuantity = await QrCode.countDocuments(
+        {
+            product: product._id
+        }
+    )
+
+    product.bundleQty = qrQuantity
+
+    await product.save()
 
     return res
         .status(200)
@@ -389,7 +497,8 @@ module.exports = {
     createProduct,
     generateCode,
     getProducts,
-    getCods,
+    getCodes,
+    getBlanckCodes,
     deletProduct,
     deleteProductCode,
     updateProduct,
