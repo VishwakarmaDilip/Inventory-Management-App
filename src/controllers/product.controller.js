@@ -381,23 +381,32 @@ const deleteProductCode = asyncHandler(async (req, res) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
     const { productName, productId } = req.body
+    const imageLocalPath = req?.file?.path
 
-    if (!productName || !productId) {
+    if (!productName || !productId || !imageLocalPath) {
         throw new ApiError(400, "All feild required")
     }
 
-    const product = await Product.findByIdAndUpdate(
-        productId,
-        {
-            productName
-        },
-        { new: true }
-    )
+    const product = await Product.findById(productId)
 
     if (!product) {
-        throw new ApiError(500, "Something went wrong")
+        throw new ApiError(404, "No Product Found")
     }
 
+    const oldProductImagePath = product.productImage
+
+    const newProductImagePath = await uploadOnCloudinary(imageLocalPath)
+
+    if (!newProductImagePath) {
+        throw new ApiError(500, "Somthing went wrong while uploading the image")
+    }
+
+    product.productName = productName
+    product.productImage = newProductImagePath
+
+    await product.save()
+
+    await deleteFromCloudinary(oldProductImagePath)
 
     return res
         .status(200)
