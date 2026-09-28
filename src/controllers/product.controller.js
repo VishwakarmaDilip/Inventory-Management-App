@@ -380,10 +380,12 @@ const deleteProductCode = asyncHandler(async (req, res) => {
 })
 
 const updateProduct = asyncHandler(async (req, res) => {
-    const { productName, productId } = req.body
+    const { productName, productId, usePrevImage } = req.body
     const imageLocalPath = req?.file?.path
 
-    if (!productName || !productId || !imageLocalPath) {
+    console.log({ imageLocalPath, usePrevImage });
+
+    if (!productName || !productId) {
         throw new ApiError(400, "All feild required")
     }
 
@@ -393,20 +395,29 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new ApiError(404, "No Product Found")
     }
 
-    const oldProductImagePath = product.productImage
+    if (usePrevImage) {
+        product.productName = productName
+        await product.save()
+    } else {
+        if (!imageLocalPath) {
+            throw new ApiError(400, "Image is required")
+        }
 
-    const newProductImagePath = await uploadOnCloudinary(imageLocalPath)
+        const oldProductImagePath = product.productImage
 
-    if (!newProductImagePath) {
-        throw new ApiError(500, "Somthing went wrong while uploading the image")
+        const newProductImagePath = await uploadOnCloudinary(imageLocalPath)
+
+        if (!newProductImagePath) {
+            throw new ApiError(500, "Somthing went wrong while uploading the image")
+        }
+
+        product.productName = productName
+        product.productImage = newProductImagePath
+
+        await product.save()
+
+        await deleteFromCloudinary(oldProductImagePath)
     }
-
-    product.productName = productName
-    product.productImage = newProductImagePath
-
-    await product.save()
-
-    await deleteFromCloudinary(oldProductImagePath)
 
     return res
         .status(200)

@@ -22,7 +22,7 @@ router.route("/getCodes").get(getCodes)
 router.route("/getBlankCodes").get(getBlanckCodes)
 router.route("/deleteProduct").delete(deletProduct)
 router.route("/deleteProductCode").delete(deleteProductCode)
-router.route("/updateProduct").patch(updateProduct)
+router.route("/updateProduct").patch(upload.single("image"), updateProduct)
 router.route("/updateCode").patch(updateCode)
 
 
