@@ -189,8 +189,28 @@ const getProducts = asyncHandler(async (req, res) => {
     )
 })
 
+const getSingleProduct = asyncHandler(async (req, res) => {
+    const { productId } = req.params
+
+    if (!productId) {
+        throw new ApiError(400, "Something went Wrong")
+    }
+
+    const product = await Product.findById(productId)
+
+    if (!product) {
+        throw new ApiError(404, "No Product Found")
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(
+            200, product, "Product Fetched Succesfully"
+        ))
+})
+
 const getCodes = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType } = req.query
+    const { page = 1, limit = 10, query, sortBy, sortType, productId } = req.query
 
     const pageNumber = parseInt(page, 10)
     const limitNumber = parseInt(limit, 10)
@@ -213,12 +233,18 @@ const getCodes = asyncHandler(async (req, res) => {
         }
     })
 
+    const matchObject = {
+        ...queryObject,
+        product: { $exists: true, $ne: null }
+    }
+
+    if (productId) {
+        matchObject.product = new mongoose.Types.ObjectId(productId)
+    }
+
     const fetchCode = await QrCode.aggregate([
         {
-            $match: {
-                ...queryObject,
-                product: { $exists: true, $ne: null }
-            }
+            $match: matchObject
         },
         { $sort: { [sortBy]: sortOrder } },
         { $skip: skip },
@@ -235,6 +261,8 @@ const getCodes = asyncHandler(async (req, res) => {
                             PID: 1,
                             productName: 1,
                             productImage: 1,
+                            bundleQty: 1,
+                            stock: 1,
                         }
                     }
                 ]
@@ -523,4 +551,5 @@ module.exports = {
     deleteProductCode,
     updateProduct,
     updateCode,
+    getSingleProduct,
 }

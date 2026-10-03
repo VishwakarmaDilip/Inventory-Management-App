@@ -9,7 +9,8 @@ const {
     deletProduct,
     updateProduct,
     updateCode,
-    getBlanckCodes
+    getBlanckCodes,
+    getSingleProduct
 } = require("../controllers/product.controller");
 
 
@@ -24,6 +25,7 @@ router.route("/deleteProduct").delete(deletProduct)
 router.route("/deleteProductCode").delete(deleteProductCode)
 router.route("/updateProduct").patch(upload.single("image"), updateProduct)
 router.route("/updateCode").patch(updateCode)
+router.route("/viewProduct/:productId").get(getSingleProduct)
 
 
 module.exports = router
