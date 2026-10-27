@@ -17,7 +17,7 @@ const {
 const router = Router()
 
 router.route("/createProduct").post(upload.single("image"), createProduct)
-router.route("/generateCode").post(generateCode)
+router.route("/generateCodes").post(generateCode)
 router.route("/getProducts").get(getProducts)
 router.route("/getCodes").get(getCodes)
 router.route("/getBlankCodes").get(getBlanckCodes)
