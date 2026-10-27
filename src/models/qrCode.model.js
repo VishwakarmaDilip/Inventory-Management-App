@@ -14,6 +14,10 @@ const qrCodeSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product"
+    },
+    inPrintQueue: {
+        type: Boolean,
+        default: false
     }
     
 },{timestamps:true})

@@ -2,9 +2,9 @@ const { default: mongoose } = require("mongoose");
 
 
 const printQueSchema = new mongoose.Schema({
-    barcode: {
+    qrCode: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Barcode"
+        ref: "QrCode"
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,

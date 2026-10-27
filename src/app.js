@@ -24,9 +24,11 @@ app.use(express.static("public"))
 
 // Imports Routes
 const productRouter = require('./routes/product.routes')
+const printRouter = require('./routes/print.routes')
 
 //Routes Declaration
 app.use("/api/v1/product", productRouter)
+app.use("/api/v1/print", printRouter)
 
 
 
