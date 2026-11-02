@@ -149,7 +149,7 @@ const getPrintQueue = asyncHandler(async (req, res) => {
     }
 
     res.
-        status(200).json(new ApiResponse(200, "Print queue retrieved successfully", { printQueue, pageInfo }))
+        status(200).json(new ApiResponse(200,{ printQueue, pageInfo }, "Print queue retrieved successfully",))
 })
 
 module.exports = {
