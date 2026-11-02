@@ -155,5 +155,5 @@ const getPrintQueue = asyncHandler(async (req, res) => {
 module.exports = {
     addInQueue,
     removeFromQueue,
-    getPrintQueue
+    getPrintQueue,
 }
