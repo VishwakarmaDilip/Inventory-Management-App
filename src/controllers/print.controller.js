@@ -75,7 +75,7 @@ const getPrintQueue = asyncHandler(async (req, res) => {
     }
 
     const totalCodesInQueue = await PrintQue.countDocuments(queryObject)
-    const toatalInQueue = await PrintQue.countDocuments()
+    const totalInQueue = await PrintQue.countDocuments()
 
     const printQueue = await PrintQue.aggregate([
         {
@@ -150,7 +150,7 @@ const getPrintQueue = asyncHandler(async (req, res) => {
     }
 
     res.
-        status(200).json(new ApiResponse(200,{ printQueue, pageInfo, toatalInQueue }, "Print queue retrieved successfully",))
+        status(200).json(new ApiResponse(200,{ printQueue, pageInfo, totalInQueue }, "Print queue retrieved successfully",))
 })
 
 module.exports = {
